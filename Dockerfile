@@ -18,6 +18,4 @@ RUN dpkg -i /tmp/rclone.deb || (apt-get update && apt-get install -f -y && rm -r
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
-VOLUME ["/data"]
-
 ENTRYPOINT ["/app/entrypoint.sh"]
