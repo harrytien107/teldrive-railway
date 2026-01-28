@@ -20,12 +20,10 @@ test -s "$RCLONE_CONFIG_PATH"  || { echo "❌ Missing rclone.conf"; exit 1; }
 
 export RCLONE_CONFIG="$RCLONE_CONFIG_PATH"
 
-echo "🚀 Starting teldrive..."
-# start in background, capture PID and logs
-teldrive serve --config "$TELDRIVE_CONFIG_PATH" >"$DATA_DIR/teldrive.log" 2>&1 &
+echo "🚀 Starting teldrive (run)..."
+teldrive run -c "$TELDRIVE_CONFIG_PATH" >"$DATA_DIR/teldrive.log" 2>&1 &
 TELDRIVE_PID=$!
 
-# If it exits early, print logs immediately
 sleep 1
 if ! kill -0 "$TELDRIVE_PID" 2>/dev/null; then
   echo "❌ teldrive exited immediately. Logs:"
@@ -33,7 +31,6 @@ if ! kill -0 "$TELDRIVE_PID" 2>/dev/null; then
   exit 1
 fi
 
-# Wait up to 60s for port 8080 to accept connections
 echo "⏳ Waiting for teldrive on 127.0.0.1:8080 ..."
 for i in {1..60}; do
   if curl -fsS "http://127.0.0.1:8080/api/auth/session" >/dev/null 2>&1; then
@@ -41,7 +38,6 @@ for i in {1..60}; do
     break
   fi
 
-  # if teldrive died during wait, dump logs
   if ! kill -0 "$TELDRIVE_PID" 2>/dev/null; then
     echo "❌ teldrive crashed during startup. Logs:"
     tail -n 200 "$DATA_DIR/teldrive.log" || true
@@ -51,7 +47,6 @@ for i in {1..60}; do
   sleep 1
 done
 
-# final check
 if ! curl -fsS "http://127.0.0.1:8080/api/auth/session" >/dev/null 2>&1; then
   echo "❌ teldrive did not become reachable. Logs:"
   tail -n 200 "$DATA_DIR/teldrive.log" || true
